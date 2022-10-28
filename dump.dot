@@ -1,0 +1,79 @@
+digraph {
+rankdir=LR;
+node [ shape=record ];
+LIST [label = "LIST|size: 5"]
+LIST -> struct0 [style="invis" weight = 1000]
+index0[label = "index: 0"];
+index1[label = "index: 1"];
+index0 -> index1 [style = "invis" weight = 200];
+index2[label = "index: 2"];
+index1 -> index2 [style = "invis" weight = 200];
+index3[label = "index: 3"];
+index2 -> index3 [style = "invis" weight = 200];
+index4[label = "index: 4"];
+index3 -> index4 [style = "invis" weight = 200];
+index5[label = "index: 5"];
+index4 -> index5 [style = "invis" weight = 200];
+index6[label = "index: 6"];
+index5 -> index6 [style = "invis" weight = 200];
+index7[label = "index: 7"];
+index6 -> index7 [style = "invis" weight = 200];
+index8[label = "index: 8"];
+index7 -> index8 [style = "invis" weight = 200];
+index9[label = "index: 9"];
+index8 -> index9 [style = "invis" weight = 200];
+INDEX -> index0[style = "invis" weight = 900]
+struct0 [
+label = "<data>data: nil|<next>next: 0|<prev>prev: 0", style = "filled", fillcolor = "cyan" 
+];
+struct1 [
+label = "<data>data: A|<next>next: 2|<prev>prev: 0", style = "filled", fillcolor = "green" 
+];
+struct0 -> struct1 [dir=none weight=100 style="invis"];
+struct2 [
+label = "<data>data: B|<next>next: 3|<prev>prev: 1", style = "filled", fillcolor = "green" 
+];
+struct1 -> struct2 [dir=none weight=100 style="invis"];
+struct3 [
+label = "<data>data: C|<next>next: 4|<prev>prev: 2", style = "filled", fillcolor = "green" 
+];
+struct2 -> struct3 [dir=none weight=100 style="invis"];
+struct4 [
+label = "<data>data: D|<next>next: 5|<prev>prev: 3", style = "filled", fillcolor = "green" 
+];
+struct3 -> struct4 [dir=none weight=100 style="invis"];
+struct5 [
+label = "<data>data: E|<next>next: 0|<prev>prev: 4", style = "filled", fillcolor = "green" 
+];
+struct4 -> struct5 [dir=none weight=100 style="invis"];
+struct6 [
+label = "<data>data:  |<next>next: 7|<prev>prev: -1", style = "filled", fillcolor = "lightgrey" 
+];
+struct5 -> struct6 [dir=none weight=100 style="invis"];
+struct7 [
+label = "<data>data:  |<next>next: 8|<prev>prev: -1", style = "filled", fillcolor = "lightgrey" 
+];
+struct6 -> struct7 [dir=none weight=100 style="invis"];
+struct8 [
+label = "<data>data:  |<next>next: 9|<prev>prev: -1", style = "filled", fillcolor = "lightgrey" 
+];
+struct7 -> struct8 [dir=none weight=100 style="invis"];
+struct9 [
+label = "<data>data:  |<next>next: 0|<prev>prev: -1", style = "filled", fillcolor = "lightgrey" 
+];
+struct8 -> struct9 [dir=none weight=100 style="invis"];
+struct1:<next> -> struct2:<prev> [weight = 2] [dir = both]
+struct2:<next> -> struct3:<prev> [weight = 2] [dir = both]
+struct3:<next> -> struct4:<prev> [weight = 2] [dir = both]
+struct4:<next> -> struct5:<prev> [weight = 2] [dir = both]
+struct5:<next> -> struct0:<prev> [weight = 2] [dir = both]
+struct6:<next> -> struct7:<prev> [weight = 2] [dir = both]
+struct7:<next> -> struct8:<prev> [weight = 2] [dir = both]
+struct8:<next> -> struct9:<prev> [weight = 2] [dir = both]
+struct9:<next> -> struct0:<prev> [weight = 2] [dir = both]
+structH [
+label = "<head>head: 1|<tail>tail: 5|<free>free: 6"]
+structH:<head> -> struct1:<data> [weight = 0]
+structH:<tail> -> struct5:<data>[weight = 0]
+structH:<free> -> struct6:<data>[weight = 0]
+}
