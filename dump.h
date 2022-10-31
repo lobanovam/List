@@ -9,23 +9,24 @@
         if (AssertOk(List) || DUMP_MODE)                                                \
         {                                                                               \
             printf("in %s(%d)\n", __PRETTY_FUNCTION__, __LINE__);                       \
-            GraphListDump(List, __PRETTY_FUNCTION__);                                   \
+            GraphListDump(List, __PRETTY_FUNCTION__, __LINE__);                         \
             ConsoleListDump(List);                                                      \
         }
 #else
     #define ASSERT_OK(List) ;
 #endif
 
+#define dumpPrint(str...)                                                 \
+    fprintf(DumpFile, str);                                               \
+    fflush(DumpFile)
+
 #ifndef DUMP_NAME
     #define DUMP_NAME "dump.dot"
 #endif
 
-#define dumpPrint(str...)                                                 \
-    fprintf(DumpFile, str);                                               \
-    fflush(DumpFile)                                                      \
+
 
 FILE *openDump();
-FILE* DumpFile = openDump();
 
 FILE* openDump() {
     FILE *Dump = fopen(DUMP_NAME, "w");

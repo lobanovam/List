@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include "dump.h"
 #include "log.h"
+#include "html.h"
+#include <string.h>
 
 const size_t listSize = 10;
 const int INIT_SIZE = 5;
+static int imageNum = 1;
+const char png[5] = ".png";
 
 struct list_elem {
     char data;
@@ -42,7 +46,8 @@ int getLogicalByData(struct LIST* List, char data);
 
 void Delete(struct LIST* List, int index);
 
-void GraphListDump(struct LIST* List, const char* str);
+void GraphListDump(struct LIST* List, const char* str, const int line);
+void setHTML(char* image);
 int AssertOk(struct LIST* List);
 
 int main() {
@@ -61,12 +66,12 @@ int main() {
     char gotPrev = getPrev(&List, 3);
     printf("gotPrev is %c\n", gotPrev);
 
-    frontInsert(&List, 'L');
-    backInsert(&List, 'Z');
-    insertBeforeGiven(&List, 3, 'F');
-    insertAfterGiven(&List, 2, 'X');
-    Delete(&List, 2);
-    insertAfterGiven(&List, 1, 'B');
+    //backInsert(&List, 'Z');
+    //frontInsert(&List, 'F');
+    insertBeforeGiven(&List, List.head, 'F');
+    insertAfterGiven(&List, List.tail, 'X');
+    //Delete(&List, 2);
+    //insertAfterGiven(&List, 1, 'B');
     /*int gotByLogical = getPhysicalByLogical(&List, 9);
     int logByPhys = getLogicalByPhysical(&List, 9);
     int logByData = getLogicalByData(&List, 'S');
@@ -87,28 +92,29 @@ char getHead(struct LIST* List){
     return List->list_arr[List->head].data;
 }
 
-char getTail(struct LIST* List){
+char getTail(struct LIST* List) {
     ASSERT(List != nullptr);
     return List->list_arr[List->tail].data;
 }
 
-char getNext(struct LIST* List, int index){
+char getNext(struct LIST* List, int index) {
     ASSERT(List != nullptr);
     return List->list_arr[List->list_arr[index].next].data;
 }
 
-char getPrev(struct LIST* List, int index){
+char getPrev(struct LIST* List, int index) {
     ASSERT(List != nullptr);
     return List->list_arr[List->list_arr[index].prev].data;
 }
 
-int frontInsert(struct LIST* List, char elem){
+int frontInsert(struct LIST* List, char elem) {
     ASSERT(List != nullptr);
 
     int curIndex = List->free;
     List->free = List->list_arr[curIndex].next;
 
     List->list_arr[curIndex].data = elem;
+    List->list_arr[List->list_arr[List->head].prev].next = curIndex;
 
     List->list_arr[curIndex].next = List->head;
     List->list_arr[List->head].prev = curIndex;
@@ -123,13 +129,14 @@ int frontInsert(struct LIST* List, char elem){
     return curIndex;
 }
 
-int backInsert(struct LIST* List, char elem){
+int backInsert(struct LIST* List, char elem) {
     ASSERT(List != nullptr);
 
     int curIndex = List->free;
     List->free = List->list_arr[curIndex].next;
 
     List->list_arr[curIndex].data = elem;
+    List->list_arr[List->list_arr[List->tail].next].prev = curIndex;
 
     List->list_arr[curIndex].prev = List->tail;
     List->list_arr[List->tail].next = curIndex;
@@ -143,7 +150,7 @@ int backInsert(struct LIST* List, char elem){
     return curIndex;
 }
 
-int insertBeforeGiven(struct LIST* List, int index, char elem){
+int insertBeforeGiven(struct LIST* List, int index, char elem) {
     ASSERT(List != nullptr);
 
     int curIndex = List->free;
@@ -157,6 +164,9 @@ int insertBeforeGiven(struct LIST* List, int index, char elem){
     List->list_arr[oldPrev].next = curIndex;
     List->list_arr[index].prev = curIndex;
 
+    List->head = List->list_arr[0].next;
+    List->tail = List->list_arr[0].prev;
+
     List->lSize++;
 
     ASSERT_OK(List);
@@ -164,8 +174,13 @@ int insertBeforeGiven(struct LIST* List, int index, char elem){
     return curIndex;
 }
 
-int insertAfterGiven(struct LIST* List, int index ,char elem){
+int insertAfterGiven(struct LIST* List, int index ,char elem) {
     ASSERT(List != nullptr);
+
+    if (index > List->lSize){
+        printf("ERROR: there are no such index!\n");
+        return -1;
+    }
 
     int curIndex = List->free;
     List->free = List->list_arr[curIndex].next;
@@ -178,6 +193,9 @@ int insertAfterGiven(struct LIST* List, int index ,char elem){
     List->list_arr[oldNext].prev = curIndex;
     List->list_arr[index].next = curIndex;
 
+    List->head = List->list_arr[0].next;
+    List->tail = List->list_arr[0].prev;
+
     List->lSize++;
 
     ASSERT_OK(List);
@@ -185,7 +203,7 @@ int insertAfterGiven(struct LIST* List, int index ,char elem){
     return curIndex;
 }
 
-void Delete(struct LIST* List, int index){
+void Delete(struct LIST* List, int index) {
     ASSERT(List != nullptr);
 
     int prev = List->list_arr[index].prev;
@@ -203,20 +221,19 @@ void Delete(struct LIST* List, int index){
     ASSERT_OK(List);
 }
 
-void ListCtor(struct LIST* List){
+void ListCtor(struct LIST* List) {
     ASSERT(List != nullptr);
 
     int i = 0;
     for ( i = 1; i < INIT_SIZE+1; i++) {
         List->list_arr[i].data = 'A'+i-1;
-        if (i < INIT_SIZE) {
+        if (i < INIT_SIZE)
             List->list_arr[i].next = i+1;
-        }
         List->list_arr[i].prev = i-1;
     }
     List->list_arr[0].data = ' ';
-    List->list_arr[0].next = 0;
-    List->list_arr[0].prev = 0;
+    List->list_arr[0].next = 1;
+    List->list_arr[0].prev = i - 1;
 
     List->head = 1;
     List->tail = i - 1;
@@ -234,7 +251,7 @@ void ListCtor(struct LIST* List){
     ASSERT_OK(List);
 }
 
-void ListDtor(struct LIST* List){
+void ListDtor(struct LIST* List) {
     ASSERT(List != nullptr);
 
     for (int i = 0; i < listSize; i++){
@@ -248,16 +265,16 @@ void ListDtor(struct LIST* List){
     List->lSize = 0;
 }
 
-void ConsoleListDump(struct LIST* List){
+void ConsoleListDump(struct LIST* List) {
     ASSERT(List != nullptr);
 
     printf("\n\t##LIST_DUMP##\n");
     printf("indx is: ");
-    for (int i = 0; i < listSize; i++){
+    for (int i = 0; i < listSize; i++) {
         printf("%3d ", i);
     }
     printf("\n");
-    for (int i = 0; i < listSize; i++){
+    for (int i = 0; i < listSize; i++) {
         printf("-----");
     }
     printf("\ndata is: ");
@@ -279,50 +296,51 @@ void ConsoleListDump(struct LIST* List){
     printf("\t##END_DUMP##\n\n");
 }
 
-void printList(struct LIST* List){
+void printList(struct LIST* List) {
     ASSERT(List != nullptr);
 
     printf("\n\t##PRINT_LIST##\n");
     int curIndex = List->head;
-    while(curIndex){
+    while(curIndex) {
         printf("%c ", List->list_arr[curIndex].data);
         curIndex = List->list_arr[curIndex].next;
     }
     printf("\n\t##END_PRINT##\n\n");
 }
 
-int getPhysicalByLogical(struct LIST* List, int index){
+int getPhysicalByLogical(struct LIST* List, int index) {
     ASSERT(List != nullptr);
 
-    if (index > List->lSize){
+    if (index > List->lSize) {
         printf("there is no such logical index\n");
         return 0;
     }
     int logicalIndex = 1;
     int curIndex = List->head;
-    while (logicalIndex < index){
+    while (logicalIndex < index) {
             curIndex = List->list_arr[curIndex].next;
             logicalIndex++;
     }
+
     return curIndex;
 }
 
-int getLogicalByPhysical(struct LIST* List, int index){
+int getLogicalByPhysical(struct LIST* List, int index) {
     int logicalIndex = 1;
     int curIndex = List->head;
-    while (curIndex != index){
-            curIndex = List->list_arr[curIndex].next;
-            if (curIndex == 0) {
-                printf("there is no such physical index\n");
-                return 0;
-            }
-            logicalIndex++;
+    while (curIndex != index) {
+        curIndex = List->list_arr[curIndex].next;
+        if (curIndex == 0) {
+            printf("there is no such physical index\n");
+            return 0;
+        }
+        logicalIndex++;
     }
 
     return logicalIndex;
 }
 
-int getLogicalByData(struct LIST* List, char data){
+int getLogicalByData(struct LIST* List, char data)  {
     int logicalIndex = 1;
     int curIndex = List->head;
     while(List->list_arr[curIndex].data != data){
@@ -337,7 +355,7 @@ int getLogicalByData(struct LIST* List, char data){
     return logicalIndex;
 }
 
-int AssertOk(struct LIST* List){
+int AssertOk(struct LIST* List) {
     ASSERT(List->head != 0);
     ASSERT(List->tail != 0);
     ASSERT(List->lSize != 0);
@@ -358,11 +376,12 @@ int AssertOk(struct LIST* List){
     return 0;
 }
 
-void GraphListDump(struct LIST* List, const char* str){
+void GraphListDump(struct LIST* List, const char* str, const int line) {
+    FILE* DumpFile = openDump();
+
     dumpPrint("digraph {\n");
     dumpPrint("rankdir=LR;\n");
     dumpPrint("node [ shape=record ];\n");
-
 
     dumpPrint("LIST [label = \"LIST|size: %d\"]\n", List->lSize);
     dumpPrint("LIST -> struct0 [style=\"invis\" weight = 1000]\n");
@@ -373,13 +392,15 @@ void GraphListDump(struct LIST* List, const char* str){
         dumpPrint("index%d -> index%d [style = \"invis\" weight = 200];\n", i-1, i);
     }
 
-    dumpPrint("INDEX -> index0[style = \"invis\" weight = 900]\n");
+    dumpPrint("INDEX -> index0 [weight=200 style=\"invis\"];\n");
 
-    for (int i = 0; i < listSize; i++){
+    for (int i = 0; i < listSize; i++) {
+
         char data = List->list_arr[i].data;
         int next = List->list_arr[i].next;
-        char prev = List->list_arr[i].prev;
+        int prev = List->list_arr[i].prev;
         char* color = NULL;
+
         if (i == 0){
             dumpPrint("struct%d [\nlabel = \"<data>data: nil|<next>next: %d|<prev>prev: %d\", style = \"filled\", fillcolor = \"cyan\" \n];\n", i, next, prev);
             continue;
@@ -390,23 +411,45 @@ void GraphListDump(struct LIST* List, const char* str){
             color = "lightgrey";
 
         dumpPrint("struct%d [\nlabel = \"<data>data: %c|<next>next: %d|<prev>prev: %d\", style = \"filled\", fillcolor = \"%s\" \n];\n", i, data, next, prev, color);
-        dumpPrint("struct%d -> struct%d [dir=none weight=100 style=\"invis\"];\n", i-1, i);
+        dumpPrint("struct%d -> struct%d [dir=none weight=100 style = \"invis\"];\n", i-1, i);
     }
 
     for (int i = 1; i < listSize; i++) {
         int next = List->list_arr[i].next;
-        dumpPrint("struct%d:<next> -> struct%d:<prev> [weight = 2] [dir = both]\n", i, next);
+        dumpPrint("struct%d:<next> -> struct%d:<prev> [weight = 2 dir = both constraint = false]\n", i, next);
     }
 
     dumpPrint("structH [\nlabel = \"<head>head: %d|<tail>tail: %d|<free>free: %d\"]\n", List->head, List->tail, List->free);
-    dumpPrint("structH:<head> -> struct%d:<data> [weight = 0]\n", List->head);
-    dumpPrint("structH:<tail> -> struct%d:<data>[weight = 0]\n", List->tail);
-    dumpPrint("structH:<free> -> struct%d:<data>[weight = 0]\n", List->free);
+    dumpPrint("structH:<head> -> struct%d:<data> [weight = 0 constraint = false]\n", List->head);
+    dumpPrint("structH:<tail> -> struct%d:<data>[weight = 0 constraint = false]\n", List->tail);
+    dumpPrint("structH:<free> -> struct%d:<data>[weight = 0 constraint = false]\n", List->free);
 
+    dumpPrint("FUNC [label = \"%s on line %d\"]\n", str, line);
     dumpPrint("}");
+
     fclose(DumpFile);
 
-    printf("%d\n", system("cd C:\\Users\\alexm\\Documents\\List"));
-    printf("%d\n", system("dot -T png -o graphCode.png dump.dot"));
+    char cmd[100] = "dot -T png dump.dot -o ";
+    char name[30] = "graphCode";
+    char num[20] = " ";
 
+    itoa(imageNum, num, 10);
+
+    strcat(num, png);
+    strcat(name, num);
+    strcat(cmd, name);
+
+    printf("%d\n", system("cd C:\\Users\\alexm\\Documents\\List"));
+    printf("%d\n", system(cmd));
+
+    printf("RESULT NAME IS %s\n", name);
+
+    setHTML(name);
+
+    imageNum++;
+}
+
+void setHTML(char* image) {
+    printHTML("<img src = \"%s\">", image);
+    printHTML("<hr>");
 }
